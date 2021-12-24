@@ -26,7 +26,15 @@
 #define WPM     (25)
 
 
-int ditlen = 1200 / WPM ;
+#define DEFAULTWPM   15
+#define MINWPM       5
+#define MAXWPM       50
+
+
+int wordsPerMinute = DEFAULTWPM;
+int ditlen = 1200 / wordsPerMinute ;
+boolean speedChange = false;
+
 int pin = 4 ;                  // blink the LED for now... 
 int tpin = 10 ;                 // tone pin
 int aborted = 0 ;
@@ -156,10 +164,19 @@ rd()
 void
 send(char ch)
 {
+
+// check for speed change:
+  if(speedChange) {
+    ditlen = 1200 / wordsPerMinute;
+    speedChange = false;
+  }
+
+// check length of oled print and if g.t. 39 clear display else print
     if (x > 39) rd();
     display.print(ch);
     x = x + 1;
-    
+
+// send code    
     if (isalpha(ch)) {
         if (islower(ch)) ch = toupper(ch) ;
         sendcode(ltab[ch-'A']) ;
@@ -246,21 +263,7 @@ void setup() {
 
 }
 
-// LOOP -------------------------------------------------------------------------------------
 
-
-void loop() {
-
-   ps2poll() ;
-      
-    if (!queueempty())
-        send(queuepop()) ;
- 
-  display.display();
-  delay(20);
-}
-
-// #################################################
 void
 queueadd(char ch)
 {
@@ -419,13 +422,20 @@ ps2poll()
             case '\033':
                 queueflush() ;
                 Serial.flush() ;
-                Serial.println("== FLUSH ==") ;
+                Serial.println(F("== FLUSH ==")) ;
                 aborted = 1 ;
                 break ;
+
+   
+            case '\043':
+                ChangeSendingSpeed();
+                speedChange = true;
+                break;
+      
                 
             case '\134': // if slash is pressed activate special code flag
               special = 1;
-              Serial.println("== MACRO ==") ;
+              Serial.println(F("== MACRO ==")) ;
               break;
 
             
@@ -438,5 +448,59 @@ ps2poll()
         }
     
     }
+  }
 }
+
+
+
+
+void ChangeSendingSpeed(){
+  char ch;
+  int wereDone = 0;
+  Serial.print(F(" words per minute at = "));
+  Serial.println(wordsPerMinute);
+
+  while(true){
+    if(Serial.available()){
+      ch = Serial.read();
+      Serial.print(F("Speed change ch = "));
+      Serial.println(wordsPerMinute);
+
+      switch(ch) {
+        case '>':
+        if(wordsPerMinute < MAXWPM)
+                  wordsPerMinute++;
+                  break;
+        case '<':
+         if(wordsPerMinute > MINWPM)
+                  wordsPerMinute--;
+                  break;
+        case '#':
+          wereDone = 1;
+          break;
+       default:
+          break;       
+      }
+      if (wereDone)
+      break;
+
+    }
+  }
+  ditlen = 1200/wordsPerMinute;
 }
+
+// LOOP -------------------------------------------------------------------------------------
+
+
+void loop() {
+
+   ps2poll() ;
+      
+    if (!queueempty())
+        send(queuepop()) ;
+ 
+  display.display();
+  delay(20);
+}
+
+// #################################################
