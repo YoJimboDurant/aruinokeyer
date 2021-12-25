@@ -222,49 +222,6 @@ send(char ch)
 
 
 
-
-// ################################################
-// MAIN                                           #
-//#################################################
-
-
-//SETUP --------------------------------------------------------------------------------------
-void setup() {
-  Serial.begin(9600);
-  display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
-  display.clearDisplay();
-
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-  display.println("KE4MKG");
-
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.setCursor(0, 17);
-  display.println("KEYER");
-  display.setTextSize(1.7);
-  display.println("Lawrenceville");
-  display.println("GA, USA");
-
-  display.display();
-
-  
-  delay(5000);
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setCursor(0, 0);
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-
-
-   x = 0;
-
-//comments 
-
-}
-
-
 void
 queueadd(char ch)
 {
@@ -361,57 +318,8 @@ ps2poll()
     char ch ;
     int special = 0;
 
-//    char M[] = {"CQ CQ CQ DE KE4MKG K\r\n"};
-//    char N[] = {"QTH IS LAWRENCEVILLE, GA ? LAWRENCENVEVILLE, GA K\r\n"};
- 
     while (Serial.available()) {
-      
-      if (special == 1){
-        
-        switch (ch=Serial.read()) {
-        case '\061':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[0])));  
-          queueadd(buffer) ;
-          break; 
-  
-      
-        case '\062':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[1])));  
-          queueadd(buffer) ;
-          break;
-
-        case '\063':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[2])));  
-          queueadd(buffer) ;
-          break;
-
-        
-        case '\064':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[3])));  
-          queueadd(buffer) ;
-          break;  
-
-        case '\065':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[4])));  
-          queueadd(buffer) ;
-          break;  
-
-        case '\066':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[5])));
-          queueadd(buffer) ;
-          break;  
-
-        default:
-          special = 0; 
-          break; 
-        
-          }
-             special = 0;
-  
-     
-        }else{
-   /* add break to normal path */
-      
+    
       
         
         if (queuefull()) {
@@ -435,12 +343,9 @@ ps2poll()
       
                 
             case '\134': // if slash is pressed activate special code flag
-              special = 1;
-              Serial.println(F("== MACRO ==")) ;
-              break;
-
-            
-            break ;
+              SpecialMacro();
+//              Serial.println(F("== MACRO ==")) ;
+ 
             default:
                 queueadd(ch) ;
                
@@ -450,7 +355,7 @@ ps2poll()
     
     }
   }
-}
+
 
 
 
@@ -465,16 +370,17 @@ void ChangeSendingSpeed(){
     if(Serial.available()){
       ch = Serial.read();
       Serial.print(F("Speed change ch = "));
-      Serial.println(wordsPerMinute);
-
+  
       switch(ch) {
         case '>':
         if(wordsPerMinute < MAXWPM)
-                  wordsPerMinute++;
-                  break;
+                 wordsPerMinute++;
+                 Serial.println(wordsPerMinute);
+                 break;
         case '<':
          if(wordsPerMinute > MINWPM)
                   wordsPerMinute--;
+                  Serial.println(wordsPerMinute);
                   break;
         case '#':
           wereDone = 1;
@@ -489,6 +395,181 @@ void ChangeSendingSpeed(){
   }
   ditlen = 1200/wordsPerMinute;
 }
+
+
+void SpecialMacro(){
+  char ch;
+  int wereDone = 0;
+  Serial.print(F(" MACRO START "));
+ 
+  while(true){
+    if(Serial.available()){
+      ch = Serial.read();
+/*      Serial.print(F("Macro  = "));
+      Serial.println(ch);
+*/
+      switch(ch) {
+        case '1':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[0])));  
+          queueadd(buffer) ;
+          wereDone = 1;
+          break;
+        case '2':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[1])));  
+          queueadd(buffer) ;
+          wereDone = 1;
+          break;
+                
+        case '3':
+          wereDone = 1;
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[2])));  
+          queueadd(buffer) ;
+          wereDone = 1;
+          break;
+       case '4':
+          wereDone = 1;
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[3])));  
+          queueadd(buffer) ;
+          wereDone = 1;
+          break;
+       case '5':
+          wereDone = 1;
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[4])));  
+          queueadd(buffer) ;
+          wereDone = 1;
+          break;
+        case '6':
+          wereDone = 1;
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[5])));  
+          queueadd(buffer) ;
+          wereDone = 1;
+          break;
+ 
+          
+       default:
+          wereDone = 0;       
+      }
+      if (wereDone == 1)
+      break;
+
+    }
+  }
+}
+
+/*{
+ char ch;
+  int wereDone = 0;
+  
+  Serial.println(F("MACRO"));
+ 
+  while(true){
+    if(Serial.available()){
+      ch = Serial.read();
+      Serial.print(F("Macro ch = "));
+      Serial.println(ch);
+
+      switch(ch) {
+         case '\061':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[0])));  
+          queueadd(buffer) ;
+           wereDone = 1;
+          break; 
+  
+      
+        case '\062':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[1])));  
+          queueadd(buffer) ;
+           wereDone = 1;
+          break;
+
+        case '\063':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[2])));  
+          queueadd(buffer) ;
+           wereDone = 1;
+           break;
+
+        
+        case '\064':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[3])));  
+          queueadd(buffer) ;
+           wereDone = 1;
+           break;  
+
+        case '\065':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[4])));  
+           wereDone = 1;
+           queueadd(buffer) ;
+          break;  
+
+        case '\066':
+          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[5])));
+          queueadd(buffer) ;
+           wereDone = 1;
+           break;  
+
+        default:
+          wereDone = 0;
+          Serial.println(F("NOPE"));
+        if (wereDone){
+      
+        break; 
+      }
+   
+    }
+    
+
+  }
+  
+} 
+}
+
+*/
+
+
+
+// ################################################
+// MAIN                                           #
+//#################################################
+
+
+//SETUP --------------------------------------------------------------------------------------
+void setup() {
+  Serial.begin(9600);
+  display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
+  display.clearDisplay();
+
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("KE4MKG");
+
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 17);
+  display.println("KEYER");
+  display.setTextSize(1.7);
+  display.println("Lawrenceville");
+  display.println("GA, USA");
+
+  display.display();
+
+  
+  delay(5000);
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+
+
+   x = 0;
+
+//comments 
+
+}
+
+
+  
 
 // LOOP -------------------------------------------------------------------------------------
 
