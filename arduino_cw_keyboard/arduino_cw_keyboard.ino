@@ -182,6 +182,7 @@ send(char ch)
 
 // check length of oled print and if g.t. 39 clear display else print
     if (x > 39) rd();
+    
     display.print(ch);
     x = x + 1;
 
@@ -374,30 +375,49 @@ void ChangeSendingSpeed(){
   int wereDone = 0;
   Serial.print(F(" words per minute at = "));
   Serial.println(wordsPerMinute);
-
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println(F("WPM"));
+    display.display();
+  
   while(true){
     if(Serial.available()){
       ch = Serial.read();
       Serial.print(F("Speed change ch = "));
+      
   
       switch(ch) {
         case '>':
         if(wordsPerMinute < MAXWPM)
                  wordsPerMinute++;
                  Serial.println(wordsPerMinute);
+                 display.clearDisplay();
+                  display.setCursor(0,0);
+                  display.println(F("WPM"));
+                  display.println(wordsPerMinute);
+                 display.display();
                  break;
         case '<':
          if(wordsPerMinute > MINWPM)
                   wordsPerMinute--;
                   Serial.println(wordsPerMinute);
+                  display.clearDisplay();
+                  display.setCursor(0,0);
+                  display.println(F("WPM"));
+                  display.println(wordsPerMinute);
+                  display.display();
                   break;
         case '#':
           wereDone = 1;
+          Serial.println(F("WPM CHANGED!"));
+          display.clearDisplay();
+          display.setCursor(0,0);
+          display.display();
           break;
        default:
           break;       
       }
-      if (wereDone)
+      if (wereDone == 1 )
       break;
 
     }
@@ -409,7 +429,7 @@ void ChangeSendingSpeed(){
 void SpecialMacro(){
   char ch;
   int wereDone = 0;
-  Serial.print(F(" MACRO START "));
+  //Serial.print(F(" MACRO START "));
  
   while(true){
     if(Serial.available()){
@@ -453,10 +473,14 @@ void SpecialMacro(){
           queueadd(buffer) ;
           wereDone = 1;
           break;
- 
+  
           
        default:
-          wereDone = 0;       
+          if(ch == 0){
+            wereDone = 0;       
+          }else{
+            wereDone = 1;
+          }
       }
       if (wereDone == 1)
       break;
@@ -465,74 +489,6 @@ void SpecialMacro(){
   }
 }
 
-/*{
- char ch;
-  int wereDone = 0;
-  
-  Serial.println(F("MACRO"));
- 
-  while(true){
-    if(Serial.available()){
-      ch = Serial.read();
-      Serial.print(F("Macro ch = "));
-      Serial.println(ch);
-
-      switch(ch) {
-         case '\061':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[0])));  
-          queueadd(buffer) ;
-           wereDone = 1;
-          break; 
-  
-      
-        case '\062':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[1])));  
-          queueadd(buffer) ;
-           wereDone = 1;
-          break;
-
-        case '\063':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[2])));  
-          queueadd(buffer) ;
-           wereDone = 1;
-           break;
-
-        
-        case '\064':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[3])));  
-          queueadd(buffer) ;
-           wereDone = 1;
-           break;  
-
-        case '\065':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[4])));  
-           wereDone = 1;
-           queueadd(buffer) ;
-          break;  
-
-        case '\066':
-          strcpy_P(buffer, (char *)pgm_read_word(&(string_table[5])));
-          queueadd(buffer) ;
-           wereDone = 1;
-           break;  
-
-        default:
-          wereDone = 0;
-          Serial.println(F("NOPE"));
-        if (wereDone){
-      
-        break; 
-      }
-   
-    }
-    
-
-  }
-  
-} 
-}
-
-*/
 
 
 
